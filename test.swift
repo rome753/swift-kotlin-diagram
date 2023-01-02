@@ -15,7 +15,7 @@ enum MyEnum {
     
 }
 
-class Foo: MyClass, MyProtocol {
+class MyChildClass: MyClass, MyProtocol {
     var a: MyClass = MyClass()
 
     var b = MyStruct()

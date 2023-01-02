@@ -90,8 +90,10 @@ def replaceName(type, data):
     ids = []
     if type in data:
         for name in data[type]:
-            if name.endswith('?') or name.endswith('!'):
+            if name.endswith('?') or name.endswith('!'): # optional
                 name = name[:-1]
+            if name.endswith('>'): # generic
+                name = name.split('<')[0]
             if name in dictNameId:
                 id = dictNameId[name]
                 ids.append(id)
