@@ -19,10 +19,10 @@ def visit(dir):
 
 
 def visitFile(path):
-    line = os.popen('sourcekitten structure --file ' + path).read()
-    # print(line)
+    structure = os.popen('sourcekitten structure --file ' + path).read()
+    # print(structure)
     try:
-        dict = json.loads(line)
+        dict = json.loads(structure)
     except Exception as e:
         print('Exception in file ' + path)
         print(e)
@@ -65,7 +65,11 @@ def visitFile(path):
                         if 'key.typename' in s:
                             variables.append(s['key.typename'])
                     if s['key.kind'] == 'source.lang.swift.expr.call':
-                        variables.append(s['key.name'])
+                        name = s['key.name']
+                        i = name.find('.')
+                        if i != -1: # class.staticFunc
+                            name = name[:i]
+                        variables.append(name)
                     if s['key.kind'] == 'source.lang.swift.decl.function.method.instance':
                         if 'key.typename' in s: # return value
                                 temporaries.append(s['key.typename'])
@@ -82,7 +86,11 @@ def visitMethod(sub, temporaries):
                 if 'key.typename' in s:
                     temporaries.append(s['key.typename'])
             if s['key.kind'] == 'source.lang.swift.expr.call':
-                    temporaries.append(s['key.name'])
+                    name = s['key.name']
+                    i = name.find('.')
+                    if i != -1: # class.staticFunc
+                        name = name[:i]
+                    temporaries.append(name)
             visitMethod(s, temporaries)
 
 
