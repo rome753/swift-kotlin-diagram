@@ -20,14 +20,12 @@ enum MyEnum {
     
 }
 
-class MyChildClass: MyClass, MyProtocol {
+class MyChildClass:  MyClass, MyProtocol {
 
     var a = FooClass.myStaticFunc()
 
     var b = MyStruct()
 
-    func myfunc() -> MyProtocol {
-        
-        return Foo()
+    func myfunc() {
     }   
 }

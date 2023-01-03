@@ -6,16 +6,16 @@ index = 0
 dataArr = []
 dictNameId = {}
 
-def visit(dir):
-    arr = os.listdir(dir)
-    for name in arr:
-        path = os.path.join(dir, name)
-        if os.path.isdir(path):
-            visit(path)
-        else:
-            if name.endswith('.swift'):
-                print('visit: ' + path)
-                visitFile(path)
+def visit(path):
+    if os.path.isdir(path):
+        arr = os.listdir(path)
+        for name in arr:
+            p = os.path.join(path, name)
+            visit(p)
+    else:
+        if path.endswith('.swift'):
+            print('visit: ' + path)
+            visitFile(path)
 
 
 def visitFile(path):
@@ -41,25 +41,34 @@ def visitFile(path):
             data['kind'] = kind.split('.')[-1]
             dataArr.append(data)
             dictNameId[name] = id
-            # print('class: ' + name)
-            if 'key.inheritedtypes' in sub: # class
-                parents = []
-                data['parents'] = parents
-                protocols = []
-                data['protocols'] = protocols
+
+            parents = []
+            data['parents'] = parents
+            protocols = []
+            data['protocols'] = protocols
+            variables = []
+            data['variables'] = variables
+            temporaries = []
+            data['temporaries'] = temporaries
+
+            print('\tvisit: ' + name)
+            if 'key.inheritedtypes' in sub: # ParentClass and protocols
                 i = 0
                 for s in sub['key.inheritedtypes']:
                     i += 1
+                    name = s['key.name'] # ParentClass
                     if i == 1:
-                        parents.append(s['key.name'])
+                        j = name.find('<') # ParentClass<T1, T2>
+                        if j != -1:
+                            arr = name[j+1:-1].split(', ')
+                            for a in arr:
+                                variables.append(a)
+                            name = name[:j]
+                        parents.append(name)
                     else:
                         protocols.append(s['key.name'])
 
             if 'key.substructure' in sub: # class members
-                variables = []
-                data['variables'] = variables
-                temporaries = []
-                data['temporaries'] = temporaries
                 for s in sub['key.substructure']:
                     if s['key.kind'] == 'source.lang.swift.decl.var.instance':
                         if 'key.typename' in s:
@@ -67,7 +76,7 @@ def visitFile(path):
                     if s['key.kind'] == 'source.lang.swift.expr.call':
                         name = s['key.name']
                         i = name.find('.')
-                        if i != -1: # class.staticFunc
+                        if i != -1: # MyClass.staticFunc
                             name = name[:i]
                         variables.append(name)
                     if s['key.kind'] == 'source.lang.swift.decl.function.method.instance':
@@ -88,7 +97,7 @@ def visitMethod(sub, temporaries):
             if s['key.kind'] == 'source.lang.swift.expr.call':
                     name = s['key.name']
                     i = name.find('.')
-                    if i != -1: # class.staticFunc
+                    if i != -1: # MyClass.staticFunc
                         name = name[:i]
                     temporaries.append(name)
             visitMethod(s, temporaries)
@@ -100,8 +109,6 @@ def replaceName(type, data):
         for name in data[type]:
             if name.endswith('?') or name.endswith('!'): # optional
                 name = name[:-1]
-            if name.endswith('>'): # generic
-                name = name.split('<')[0]
             if name in dictNameId:
                 id = dictNameId[name]
                 ids.append(id)
@@ -109,10 +116,12 @@ def replaceName(type, data):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        visit('./')
+    argc = len(sys.argv)
+    if argc < 2:
+        visit('.')
     else:
-        visit(sys.argv[1])
+        for i in range(1, argc):
+            visit(sys.argv[i])
         
     for data in dataArr:
         replaceName('parents', data)
