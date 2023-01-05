@@ -1,7 +1,7 @@
 main();
 
 function main() {
-    readTextFile('data.json');
+    readTextFile('generate/data.json');
 }
 
 function readTextFile(file) {

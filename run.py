@@ -9,13 +9,19 @@ dictNameId = {}
 def visit(path):
     if os.path.isdir(path):
         arr = os.listdir(path)
+        ret = []
         for name in arr:
             p = os.path.join(path, name)
-            visit(p)
+            r = visit(p)
+            if r is not None:
+                ret.append(r)
+        return {os.path.basename(path): ret}
     else:
         if path.endswith('.swift'):
             print('visit: ' + path)
             visitFile(path)
+            return os.path.basename(path)
+        return None
 
 
 def visitFile(path):
@@ -37,6 +43,7 @@ def visitFile(path):
             data = {}
             name = sub['key.name']
             data['id'] = id
+            data['file'] = os.path.basename(path)
             data['name'] = name
             data['kind'] = kind.split('.')[-1]
             dataArr.append(data)
@@ -120,8 +127,11 @@ if __name__ == '__main__':
     if argc < 2:
         visit('.')
     else:
-        for i in range(1, argc):
-            visit(sys.argv[i])
+        tree = visit(sys.argv[1])
+        data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'tree.json')
+        f = open(data, 'w')
+        f.write(json.dumps(tree))
+        f.close()
         
     for data in dataArr:
         replaceName('parents', data)
@@ -130,7 +140,7 @@ if __name__ == '__main__':
         replaceName('temporaries', data)
 
 
-    data = os.path.join(os.path.dirname(sys.argv[0]), 'data.json')
+    data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'data.json')
     f = open(data, 'w')
     f.write(json.dumps(dataArr))
     f.close()
