@@ -42,12 +42,37 @@ function handleJsonStr(str) {
             }
         }
     }
+    
+    var temporariesEnabled = true
+
+    let nodes = new vis.DataSet(nodeArr)
+    let edges = new vis.DataSet(edgeArr)
+
+    const nodesFilter = (node) => {
+        return true;
+    };
+
+    const edgesFilter = (edge) => {
+        return edge.type != 'temporaries' || temporariesEnabled;
+    };
+
+    const nodesView = new vis.DataView(nodes, { filter: nodesFilter });
+    const edgesView = new vis.DataView(edges, { filter: edgesFilter });
+
+    const edgeFilters = document.getElementsByName("edgesFilter");
+    edgeFilters.forEach((filter) =>
+        filter.addEventListener("change", (e) => {
+        const { value, checked } = e.target;
+        temporariesEnabled = checked;
+        edgesView.refresh();
+        })
+    );
 
     // create a network
     var container = document.getElementById("mynetwork");
     var data = {
-    nodes: new vis.DataSet(nodeArr),
-    edges: new vis.DataSet(edgeArr),
+    nodes: nodesView,
+    edges: edgesView,
     };
     var options = {
         physics: {
@@ -105,6 +130,7 @@ function createEdge(from, to, type) {
             break
     }
     return {
+        type: type,
         from: from,
         to: to,          
         arrows: {
