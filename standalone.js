@@ -69,8 +69,10 @@ function hideListOrNot(div, hide) {
     while (child != ul.lastElementChild) {
         hideDivOrNot(child.firstElementChild, hide)
         child = child.nextElementSibling
+    }
+    if (child != undefined) {
+        hideDivOrNot(child.firstElementChild, hide)
     }        
-    hideDivOrNot(child.firstElementChild, hide)
 }
 
 function generateTree(obj) {
@@ -195,6 +197,7 @@ function createNode(id, label, type, file) {
         label: label,
         shape: shape,
         shapeProperties: dashes ? { borderDashes: [5, 5] } : {},
+        physics: true,
         // color: { background: "transparent"},
     }
 }
