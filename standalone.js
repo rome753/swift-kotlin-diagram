@@ -1,12 +1,19 @@
+
+const hideDirs = {}
+const hideFiles = {}
+var nodesView = undefined
+var edgesView = undefined
+
 main();
 
 function main() {
     readTextFile('generate/data.json');
+    readTextFile('generate/tree.json');
 }
 
-function readTextFile(file) {
+function readTextFile(path) {
     var rawFile = new XMLHttpRequest();
-    rawFile.open("GET", file, false);
+    rawFile.open("GET", path, false);
     rawFile.onreadystatechange = function ()
     {
         if(rawFile.readyState === 4)
@@ -14,16 +21,83 @@ function readTextFile(file) {
             if(rawFile.status === 200 || rawFile.status == 0)
             {
                 var allText = rawFile.responseText;
-                handleJsonStr(allText);
+                handleJsonStr(path, allText);
             }
         }
     }
     rawFile.send(null);
 }
 
-function handleJsonStr(str) {
-    var dataArr = JSON.parse(str);
+function handleJsonStr(path, str) {
+    let json = JSON.parse(str);
+    if (path == 'generate/data.json') {
+        handleDataJson(json)
+    } else if (path == 'generate/tree.json') {
+        handleTreeJson(json)
+    }
+}
 
+function handleTreeJson(obj) {
+    var tree = document.getElementById("mytree");
+    var html = generateTree(obj)
+    tree.innerHTML = '<ul>' + html + '</ul>'
+
+    for (var ele of document.querySelectorAll('#file')) {
+        // console.log(li.innerHTML)
+        ele.addEventListener('click', function(e) {
+            var file = e.target.innerHTML
+            console.log(file)
+            if (hideFiles[file] == true) {
+                hideFiles[file] = false
+                e.target.style.opacity = 1
+            } else {
+                hideFiles[file] = true
+                e.target.style.opacity = 0.3
+            }
+            nodesView.refresh()
+        });
+    }
+
+    for (var ele of document.querySelectorAll('#dir')) {
+        // console.log(li.getElementsByClassName('li'))
+        ele.addEventListener('click', function(e) {
+            var div = e.target
+            var hide = div.style.opacity != 0.3
+            div.style.opacity = hide ? 0.3 : 1
+            
+            var ul = div.nextElementSibling
+            var child = ul.firstElementChild
+            while (child != ul.lastElementChild) {
+                hideListItemOrNot(child, hide)
+                child = child.nextElementSibling
+            }        
+            hideListItemOrNot(child, hide)        
+            nodesView.refresh()
+        });
+    }
+}
+
+function hideListItemOrNot(li, hide) {
+    var div = li.firstElementChild
+    if (div.id == 'file') {
+        hideFiles[div.innerHTML] = hide
+        div.style.opacity = hide ? 0.3 : 1
+    }
+}
+
+function generateTree(obj) {
+    if (typeof obj == 'string') {
+        return `<div id='file'>${obj}</div>`
+    } else {
+        var str = `<div id='dir'>${obj['name']}</div><ul>`
+        for (var o of obj['list']) {
+            str += '<li>' + generateTree(o) + '</li>'
+        }
+        return str + '</ul>'
+    }
+}
+
+function handleDataJson(dataArr) {
     var nodeArr = []
     var edgeArr = []
 
@@ -31,7 +105,7 @@ function handleJsonStr(str) {
     var edgeTypes = ['parents','protocols','variables','temporaries']
 
     for (var data of dataArr) {
-        var node = createNode(data['id'], data['name'], data['kind'])
+        var node = createNode(data['id'], data['name'], data['kind'], data['file'])
         nodeArr.push(node)
         
         var from = data['id']
@@ -49,6 +123,9 @@ function handleJsonStr(str) {
     let edges = new vis.DataSet(edgeArr)
 
     const nodesFilter = (node) => {
+        if (hideFiles[node.file] == true) {
+            return false
+        }
         return true;
     };
 
@@ -56,8 +133,8 @@ function handleJsonStr(str) {
         return edge.type != 'temporaries' || temporariesEnabled;
     };
 
-    const nodesView = new vis.DataView(nodes, { filter: nodesFilter });
-    const edgesView = new vis.DataView(edges, { filter: edgesFilter });
+    nodesView = new vis.DataView(nodes, { filter: nodesFilter });
+    edgesView = new vis.DataView(edges, { filter: edgesFilter });
 
     const edgeFilters = document.getElementsByName("edgesFilter");
     edgeFilters.forEach((filter) =>
@@ -87,7 +164,7 @@ function handleJsonStr(str) {
     var network = new vis.Network(container, data, options);
 }
 
-function createNode(id, label, type) {
+function createNode(id, label, type, file) {
     var shape = 'box'
     var dashes = false
     switch(type) {
@@ -104,6 +181,7 @@ function createNode(id, label, type) {
             break
     }
     return {
+        file: file,
         id: id,
         label: label,
         shape: shape,

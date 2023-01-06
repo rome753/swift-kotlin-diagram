@@ -15,7 +15,10 @@ def visit(path):
             r = visit(p)
             if r is not None:
                 ret.append(r)
-        return {os.path.basename(path): ret}
+        return {
+            'name': os.path.basename(path),
+            'list': ret
+        }
     else:
         if path.endswith('.swift'):
             print('visit: ' + path)
