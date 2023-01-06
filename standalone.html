@@ -14,17 +14,40 @@
 
       #mynetwork {
         position: fixed;
-        left: 400px;
-        top: 20px;
+        left: 300px;
+        top: 0px;
         bottom: 0px;
         right: 0px;
         min-height: 100vh;
         background: white;
+        border-left: 1px solid lightgray;
       }
 
+      #myfilter {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        bottom: 0px;
+        width: 300px;
+        min-height: 100vh;
+        background: white;
+      }
 
-      #title {
-        margin-bottom: 5em;
+      #mytree {
+        overflow: scroll;
+        position: fixed;
+        left: 0px;
+        top: 100px;
+        bottom: 0px;
+        width: 300px;
+        border-top: 1px solid lightgray;
+      }
+
+      #dir {
+        font-size: 12px;
+      }
+      #file {
+        font-size: 12px;
       }
     </style>
 
@@ -38,14 +61,10 @@
 
   <body>
 
-    <div>
-      <label>
-        <input type="checkbox" name="edgesFilter" value="parent" checked />
-        temporaries
-      </label>
+    <div id="myfilter">
+      <div id="mycheck"></div>
+      <div id="mytree"></div>
     </div>
-    
-    <div id="mytree"></div>
 
     <div id="mynetwork"></div>
   

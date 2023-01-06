@@ -1,6 +1,5 @@
-
-const hideDirs = {}
 const hideFiles = {}
+const hideEdges = {}
 var nodesView = undefined
 var edgesView = undefined
 
@@ -42,47 +41,36 @@ function handleTreeJson(obj) {
     var html = generateTree(obj)
     tree.innerHTML = '<ul>' + html + '</ul>'
 
-    for (var ele of document.querySelectorAll('#file')) {
-        // console.log(li.innerHTML)
-        ele.addEventListener('click', function(e) {
-            var file = e.target.innerHTML
-            console.log(file)
-            if (hideFiles[file] == true) {
-                hideFiles[file] = false
-                e.target.style.opacity = 1
-            } else {
-                hideFiles[file] = true
-                e.target.style.opacity = 0.3
-            }
-            nodesView.refresh()
-        });
-    }
-
-    for (var ele of document.querySelectorAll('#dir')) {
+    for (var ele of tree.querySelectorAll('div')) {
         // console.log(li.getElementsByClassName('li'))
         ele.addEventListener('click', function(e) {
-            var div = e.target
-            var hide = div.style.opacity != 0.3
-            div.style.opacity = hide ? 0.3 : 1
-            
-            var ul = div.nextElementSibling
-            var child = ul.firstElementChild
-            while (child != ul.lastElementChild) {
-                hideListItemOrNot(child, hide)
-                child = child.nextElementSibling
-            }        
-            hideListItemOrNot(child, hide)        
+            var div = e.target   
+            var hide = div.style.opacity != 0.3 
+            hideDivOrNot(div, hide) 
             nodesView.refresh()
         });
     }
 }
 
-function hideListItemOrNot(li, hide) {
-    var div = li.firstElementChild
+function hideDivOrNot(div, hide) {
     if (div.id == 'file') {
         hideFiles[div.innerHTML] = hide
         div.style.opacity = hide ? 0.3 : 1
+    } else if (div.id == 'dir') {
+        hideListOrNot(div, hide)
     }
+}
+
+function hideListOrNot(div, hide) {
+    div.style.opacity = hide ? 0.3 : 1
+    
+    var ul = div.nextElementSibling
+    var child = ul.firstElementChild
+    while (child != ul.lastElementChild) {
+        hideDivOrNot(child.firstElementChild, hide)
+        child = child.nextElementSibling
+    }        
+    hideDivOrNot(child.firstElementChild, hide)
 }
 
 function generateTree(obj) {
@@ -97,12 +85,41 @@ function generateTree(obj) {
     }
 }
 
+function generateCheck(list) {
+    var div = document.getElementById("mycheck");
+    var html = ''
+    for (var name of list) {
+        html += 
+        `<div>
+            <label>
+            <input type="checkbox" name="edgesFilter" value="${name}" checked />
+            ${name}
+            </label>
+        </div>`
+    }
+    div.innerHTML = html
+
+
+    const edgeFilters = document.getElementsByName("edgesFilter");
+    edgeFilters.forEach((filter) =>
+        filter.addEventListener("change", (e) => {
+            const { value, checked } = e.target;
+            console.log(value)
+            console.log(checked)
+            hideEdges[value] = !checked
+            edgesView.refresh();
+        })
+    );
+}
+
 function handleDataJson(dataArr) {
     var nodeArr = []
     var edgeArr = []
 
     var nodeTypes = ['class','struct','protocol','enum']
     var edgeTypes = ['parents','protocols','variables','temporaries']
+
+    generateCheck(edgeTypes)
 
     for (var data of dataArr) {
         var node = createNode(data['id'], data['name'], data['kind'], data['file'])
@@ -117,8 +134,6 @@ function handleDataJson(dataArr) {
         }
     }
     
-    var temporariesEnabled = true
-
     let nodes = new vis.DataSet(nodeArr)
     let edges = new vis.DataSet(edgeArr)
 
@@ -130,20 +145,14 @@ function handleDataJson(dataArr) {
     };
 
     const edgesFilter = (edge) => {
-        return edge.type != 'temporaries' || temporariesEnabled;
+        if (hideEdges[edge.type] == true) {
+            return false
+        }
+        return true;
     };
 
     nodesView = new vis.DataView(nodes, { filter: nodesFilter });
     edgesView = new vis.DataView(edges, { filter: edgesFilter });
-
-    const edgeFilters = document.getElementsByName("edgesFilter");
-    edgeFilters.forEach((filter) =>
-        filter.addEventListener("change", (e) => {
-        const { value, checked } = e.target;
-        temporariesEnabled = checked;
-        edgesView.refresh();
-        })
-    );
 
     // create a network
     var container = document.getElementById("mynetwork");
@@ -222,6 +231,6 @@ function createEdge(from, to, type) {
             enabled: true,
             type: 'discrete',
         },
-        physics: false,
+        physics: true,
     }
 }
