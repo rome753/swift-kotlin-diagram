@@ -1,6 +1,9 @@
 import os
 import sys
 import json
+import webbrowser
+
+openBrowser = True
 
 index = 0
 dataArr = []
@@ -147,3 +150,7 @@ if __name__ == '__main__':
     f = open(data, 'w')
     f.write(json.dumps(dataArr))
     f.close()
+
+    if openBrowser:
+        webbrowser.open('http://localhost:8080/class-diagram.html')
+        os.system('python3 -m http.server 8080')
