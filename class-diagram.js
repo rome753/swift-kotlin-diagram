@@ -124,7 +124,7 @@ function handleDataJson(dataArr) {
     generateCheck(edgeTypes)
 
     for (var data of dataArr) {
-        var node = createNode(data['id'], data['name'], data['kind'], data['file'])
+        var node = createNode(data['id'], data['detail'], data['kind'], data['file'])
         nodeArr.push(node)
         
         var from = data['id']
@@ -164,7 +164,7 @@ function handleDataJson(dataArr) {
     };
     var options = {
         physics: {
-          enabled: true,
+          enabled: false,
         },
         // layout: {
         //     hierarchical: {
@@ -197,7 +197,7 @@ function createNode(id, label, type, file) {
         label: label,
         shape: shape,
         shapeProperties: dashes ? { borderDashes: [5, 5] } : {},
-        physics: true,
+        // physics: false,
         // color: { background: "transparent"},
     }
 }
@@ -234,6 +234,6 @@ function createEdge(from, to, type) {
             enabled: true,
             type: 'discrete',
         },
-        physics: true,
+        // physics: false,
     }
 }

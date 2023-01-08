@@ -3,7 +3,8 @@ import sys
 import json
 import webbrowser
 
-openBrowser = True
+openBrowser = False
+printStructrue = False
 
 index = 0
 dataArr = []
@@ -32,7 +33,8 @@ def visit(path):
 
 def visitFile(path):
     structure = os.popen('sourcekitten structure --file ' + path).read()
-    # print(structure)
+    if printStructrue:
+        print(structure)
     try:
         dict = json.loads(structure)
     except Exception as e:
@@ -42,60 +44,88 @@ def visitFile(path):
 
     for sub in dict['key.substructure']:
         kind = sub['key.kind']
-        if kind == 'source.lang.swift.decl.class' or kind == 'source.lang.swift.decl.struct' or kind == 'source.lang.swift.decl.protocol' or kind == 'source.lang.swift.decl.enum':
-            global index
-            index += 1
-            id = index
-            data = {}
-            name = sub['key.name']
-            data['id'] = id
-            data['file'] = os.path.basename(path)
-            data['name'] = name
-            data['kind'] = kind.split('.')[-1]
-            dataArr.append(data)
-            dictNameId[name] = id
+        validKinds = ['source.lang.swift.decl.class', 'source.lang.swift.decl.struct', 'source.lang.swift.decl.protocol', 'source.lang.swift.decl.enum']
+        if kind not in validKinds:
+            continue
+        global index
+        index += 1
+        id = index
+        data = {}
+        name = sub['key.name']
+        data['id'] = id
+        data['file'] = os.path.basename(path)
+        data['name'] = name
+        data['kind'] = kind.split('.')[-1]
+        dataArr.append(data)
+        dictNameId[name] = id
 
-            parents = []
-            data['parents'] = parents
-            protocols = []
-            data['protocols'] = protocols
-            variables = []
-            data['variables'] = variables
-            temporaries = []
-            data['temporaries'] = temporaries
+        parents = []
+        data['parents'] = parents
+        protocols = []
+        data['protocols'] = protocols
+        variables = []
+        data['variables'] = variables
+        temporaries = []
+        data['temporaries'] = temporaries
 
-            print('\tvisit: ' + name)
-            if 'key.inheritedtypes' in sub: # ParentClass and protocols
-                i = 0
-                for s in sub['key.inheritedtypes']:
-                    i += 1
-                    name = s['key.name'] # ParentClass
-                    if i == 1:
-                        j = name.find('<') # ParentClass<T1, T2>
-                        if j != -1:
-                            arr = name[j+1:-1].split(', ')
-                            for a in arr:
-                                variables.append(a)
-                            name = name[:j]
-                        parents.append(name)
-                    else:
-                        protocols.append(s['key.name'])
+        varDetails = []
+        funcDetails = []
 
-            if 'key.substructure' in sub: # class members
-                for s in sub['key.substructure']:
-                    if s['key.kind'] == 'source.lang.swift.decl.var.instance':
-                        if 'key.typename' in s:
-                            variables.append(s['key.typename'])
-                    if s['key.kind'] == 'source.lang.swift.expr.call':
-                        name = s['key.name']
-                        i = name.find('.')
-                        if i != -1: # MyClass.staticFunc
-                            name = name[:i]
-                        variables.append(name)
-                    if s['key.kind'] == 'source.lang.swift.decl.function.method.instance':
-                        if 'key.typename' in s: # return value
-                                temporaries.append(s['key.typename'])
-                        visitMethod(s, temporaries)
+        print('-visit: ' + name)
+        if 'key.inheritedtypes' in sub: # ParentClass and protocols
+            i = 0
+            for s in sub['key.inheritedtypes']:
+                i += 1
+                name = s['key.name'] # ParentClass
+                if i == 1:
+                    j = name.find('<') # ParentClass<T1, T2>
+                    if j != -1:
+                        arr = name[j+1:-1].split(', ')
+                        for a in arr:
+                            variables.append(a)
+                        name = name[:j]
+                    parents.append(name)
+                else:
+                    protocols.append(s['key.name'])
+
+        if 'key.substructure' in sub: # class members
+            for s in sub['key.substructure']:
+                if s['key.kind'].startswith('source.lang.swift.decl.var'): # .instance/.static/.class
+                    type = s['key.kind'].split('.')[-1]
+                    type = type if type != 'instance' else ''
+                    typename = '' if 'key.typename' not in s else s['key.typename']
+                    if typename != '':
+                        if type == '':
+                            variables.append(typename)
+                        else:
+                            temporaries.append(typename)
+                    s1 = '' if typename == '' else ': ' + typename
+                    s2 = '' if type == '' else ' (' + type + ')'
+                    varDetails.append('- ' + s['key.name'] + s1 + s2)
+                if s['key.kind'] == 'source.lang.swift.expr.call':
+                    name = s['key.name']
+                    i = name.find('.')
+                    if i != -1: # MyClass.staticFunc
+                        name = name[:i]
+                    variables.append(name)
+                if s['key.kind'].startswith('source.lang.swift.decl.function.method'): # .instance/.static/.class
+                    type = s['key.kind'].split('.')[-1]
+                    type = type if type != 'instance' else ''
+                    typename = '' if 'key.typename' not in s else s['key.typename']
+                    if typename != '':
+                        temporaries.append(typename)
+                    
+                    s1 = '' if typename == '' else ': ' + typename
+                    s2 = '' if type == '' else ' (' + type + ')'
+                    funcDetails.append('+ ' + s['key.name'] + s1 + s2)
+                    visitMethod(s, temporaries)
+                if s['key.kind'] == 'source.lang.swift.decl.enumcase':
+                    varDetails.append('.' + s['key.substructure'][0]['key.name'])
+
+        
+        s1 = '\n'.join(varDetails)
+        s2 = '\n'.join(funcDetails)
+        data['detail'] = '\n-------------------------\n'.join([data['name'], s1, s2])
 
 
 def visitMethod(sub, temporaries):
@@ -131,6 +161,7 @@ def replaceName(type, data):
 if __name__ == '__main__':
     argc = len(sys.argv)
     if argc < 2:
+        printStructrue = True
         visit('.')
     else:
         tree = visit(sys.argv[1])

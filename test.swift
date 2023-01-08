@@ -1,5 +1,25 @@
 
 class MyClass {
+
+    static func staticFunc1() {
+
+    }
+
+    class func classFunc1() -> Int {
+        
+    }
+
+    static var a = 2
+    class var b: FooClass = nil
+
+    func func1() {
+
+    }
+
+    func func2() -> String {
+        return String()
+    }
+
 }
 
 class FooClass {
@@ -17,7 +37,8 @@ struct MyStruct {
 }
 
 enum MyEnum {
-    
+    case success
+    case fail
 }
 
 class MyChildClass:  MyClass, MyProtocol {
