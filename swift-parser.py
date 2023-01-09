@@ -164,6 +164,7 @@ if __name__ == '__main__':
         printStructrue = True
         visit('.')
     else:
+        openBrowser = True
         tree = visit(sys.argv[1])
         data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'tree.json')
         f = open(data, 'w')

@@ -163,9 +163,8 @@ function handleDataJson(dataArr) {
     edges: edgesView,
     };
     var options = {
-        physics: {
-          enabled: false,
-        },
+        physics: createPhysicsConfig(),
+
         // layout: {
         //     hierarchical: {
         //       direction: 'Up-Down',
@@ -173,6 +172,19 @@ function handleDataJson(dataArr) {
         // },
     };
     var network = new vis.Network(container, data, options);
+    // network.stopSimulation()
+    // network.on("dragStart", function (params) {
+    //     // There's no point in displaying this event on screen, it gets immediately overwritten
+    //     params.event = "[original event]";
+
+    //     network.startSimulation()
+    // });
+
+    // network.on("dragEnd", function (params) {
+    //     params.event = "[original event]";
+ 
+    //     network.stopSimulation()
+    // });
 }
 
 function createNode(id, label, type, file) {
@@ -197,7 +209,7 @@ function createNode(id, label, type, file) {
         label: label,
         shape: shape,
         shapeProperties: dashes ? { borderDashes: [5, 5] } : {},
-        // physics: false,
+        physics: true,
         // color: { background: "transparent"},
     }
 }
@@ -235,5 +247,57 @@ function createEdge(from, to, type) {
             type: 'discrete',
         },
         // physics: false,
+    }
+}
+
+function createPhysicsConfig() {
+    return  {
+        enabled: false,
+        barnesHut: {
+          theta: 0.5,
+          gravitationalConstant: -2000,
+          centralGravity: 0.3,
+          springLength: 95,
+          springConstant: 0.04,
+          damping: 0.09,
+          avoidOverlap: 0
+        },
+        forceAtlas2Based: {
+          theta: 0.5,
+          gravitationalConstant: -50,
+          centralGravity: 0.01,
+          springConstant: 0.08,
+          springLength: 100,
+          damping: 0.4,
+          avoidOverlap: 0
+        },
+        repulsion: {
+          centralGravity: 0.2,
+          springLength: 200,
+          springConstant: 0.05,
+          nodeDistance: 100,
+          damping: 0.09
+        },
+        hierarchicalRepulsion: {
+          centralGravity: 0.0,
+          springLength: 100,
+          springConstant: 0.01,
+          nodeDistance: 120,
+          damping: 0.09,
+          avoidOverlap: 0
+        },
+        maxVelocity: 50,
+        minVelocity: 0.1,
+        solver: 'barnesHut',
+        stabilization: {
+          enabled: true,
+          iterations: 1000,
+          updateInterval: 100,
+          onlyDynamicEdges: false,
+          fit: true
+        },
+        timestep: 0.5,
+        adaptiveTimestep: true,
+        wind: { x: 0, y: 0 }
     }
 }

@@ -2,10 +2,12 @@ Show ios project swift class diagram, use SourceKitten to parse swift file struc
 
 # Features
 - Class diagram
+- Class detail
 - File tree view
 - File filter
 - Edge filter
 
 # TODO
-- Class detail
 - Swift extentions
+- Save and load
+- Physics configuration
