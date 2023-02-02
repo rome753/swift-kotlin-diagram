@@ -8,7 +8,6 @@ printStructrue = False
 
 index = 0
 dataArr = []
-dictNameId = {}
 
 def visit(path):
     if os.path.isdir(path):
@@ -57,7 +56,6 @@ def visitFile(path):
         data['name'] = name
         data['kind'] = kind.split('.')[-1]
         dataArr.append(data)
-        dictNameId[name] = id
 
         parents = []
         data['parents'] = parents
@@ -147,15 +145,13 @@ def visitMethod(sub, temporaries):
 
 
 def replaceName(type, data):
-    ids = []
+    data1 = []
     if type in data:
         for name in data[type]:
             if name.endswith('?') or name.endswith('!'): # optional
                 name = name[:-1]
-            if name in dictNameId:
-                id = dictNameId[name]
-                ids.append(id)
-    data[type] = ids
+            data1.append(name)
+    data[type] = data1
 
 
 if __name__ == '__main__':

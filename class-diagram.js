@@ -123,6 +123,11 @@ function handleDataJson(dataArr) {
 
     generateCheck(edgeTypes)
 
+    var nameIdDict = {}
+    for (var data of dataArr) {
+        nameIdDict[data['name']] = data['id']
+    }
+
     for (var data of dataArr) {
         var node = createNode(data['id'], data['detail'], data['kind'], data['file'])
         nodeArr.push(node)
@@ -130,8 +135,11 @@ function handleDataJson(dataArr) {
         var from = data['id']
         for (var type of edgeTypes) {
             for (var to of data[type]) {
-                var edge = createEdge(from, to, type)
-                edgeArr.push(edge)
+                to = nameIdDict[to]
+                if (to != undefined) {
+                    var edge = createEdge(from, to, type)
+                    edgeArr.push(edge)
+                }
             }
         }
     }
