@@ -4,9 +4,7 @@ import json
 import webbrowser
 
 openBrowser = False
-
-index = 0
-dataArr = []
+reloadAP = True
 
 def visit(path):
     if os.path.isdir(path):
@@ -49,9 +47,10 @@ if __name__ == '__main__':
     f = open(data, 'w')
     f.write(json.dumps(tree))
     f.close()
-        
-    os.system('kotlinc myprocessor -cp symbol-processing-api-1.8.0-1.0.8.jar -d myprocessor.jar')
-    os.system('jar uvMf myprocessor.jar META-INF')
+    
+    if reloadAP:
+        os.system('kotlinc myprocessor -cp symbol-processing-api-1.8.0-1.0.8.jar -d myprocessor.jar')
+        os.system('jar uvMf myprocessor.jar META-INF')
 
     KSP_PLUGIN_OPT = 'plugin:com.google.devtools.ksp.symbol-processing'
     KSP_PLUGIN_JAR = 'symbol-processing-cmdline-1.8.0-1.0.8.jar'
@@ -72,3 +71,8 @@ if __name__ == '__main__':
     '-P plugin:com.google.devtools.ksp.symbol-processing:cachesDir=../generate '
     '' + projPath)
     os.system(cmd)
+
+    if openBrowser:
+        os.chdir('..')
+        webbrowser.open('http://localhost:8080/diagram.html')
+        os.system('python3 -m http.server 8080')
