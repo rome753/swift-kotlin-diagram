@@ -156,16 +156,19 @@ def replaceName(type, data):
 
 if __name__ == '__main__':
     argc = len(sys.argv)
+    projPath = ''
     if argc < 2:
         printStructrue = True
-        visit('.')
+        projPath = 'test'
     else:
         openBrowser = True
-        tree = visit(sys.argv[1])
-        data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'tree.json')
-        f = open(data, 'w')
-        f.write(json.dumps(tree))
-        f.close()
+        projPath = sys.argv[1]
+
+    tree = visit(projPath)
+    data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'tree.json')
+    f = open(data, 'w')
+    f.write(json.dumps(tree))
+    f.close()
         
     for data in dataArr:
         replaceName('parents', data)
@@ -180,5 +183,5 @@ if __name__ == '__main__':
     f.close()
 
     if openBrowser:
-        webbrowser.open('http://localhost:8080/class-diagram.html')
+        webbrowser.open('http://localhost:8080/diagram.html')
         os.system('python3 -m http.server 8080')
