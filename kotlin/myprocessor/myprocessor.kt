@@ -11,16 +11,16 @@ fun main() {
 
 }
 
-class SmallProvider:SymbolProcessorProvider {
+class MySymbolProcessorProvider:SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return SmallProcessor(environment)
+        return MySymbolProcessor(environment)
     }
 }
 
-class SmallProcessor(private val environment: SymbolProcessorEnvironment): SymbolProcessor {
+class MySymbolProcessor(private val environment: SymbolProcessorEnvironment): SymbolProcessor {
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        environment.logger.info("解析开始--------------------------------")
+        environment.logger.info("process--------------------------------")
         val logger = environment.logger
 
         val files = resolver.getAllFiles()
@@ -56,14 +56,18 @@ class SmallProcessor(private val environment: SymbolProcessorEnvironment): Symbo
 
                     mc.detail += "-------------------------\\n"
                     dec.getAllFunctions().forEach { func ->
-                        mc.temporaries.add(func.returnType.toString())
-                        func.parameters.forEach {
-                            mc.temporaries.add(it.type.toString())
+                        if (func.toString() == "<init>") {
+                            // ignore
+                        } else {
+                            mc.temporaries.add(func.returnType.toString())
+                            func.parameters.forEach {
+                                mc.temporaries.add(it.type.toString())
+                            }
+                            val l = func.parameters.joinToString {
+                                it.type.toString()
+                            }
+                            mc.detail += "+ $func($l): ${func.returnType}\\n"
                         }
-                        val l = func.parameters.joinToString {
-                            it.type.toString()
-                        }
-                        mc.detail += "+ $func($l): ${func.returnType}\\n"
                     }
 
                 }
@@ -86,11 +90,11 @@ class SmallProcessor(private val environment: SymbolProcessorEnvironment): Symbo
     }
 
     override fun finish() {
-        environment.logger.info("解析完成--------------------------------")
+        environment.logger.info("finish--------------------------------")
     }
 
     override fun onError() {
-        environment.logger.info("解析出错！！！")
+        environment.logger.info("onError!!!")
     }
 }
 
