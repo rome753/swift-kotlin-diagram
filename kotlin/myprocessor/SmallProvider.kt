@@ -7,6 +7,10 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.*
 
+fun main() {
+
+}
+
 class SmallProvider:SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return SmallProcessor(environment)
@@ -44,31 +48,39 @@ class SmallProcessor(private val environment: SymbolProcessorEnvironment): Symbo
                         mc.parents.add(it.toString())
                     }
 
+                    mc.detail += "\\n-------------------------\\n"
                     dec.getAllProperties().forEach { prop ->
-                        logger.info(prop.toString() + ": " + prop.type)
                         mc.variables.add(prop.type.toString())
+                        mc.detail += "- $prop: ${prop.type}\\n"
                     }
-//                    dec.getAllFunctions().forEach { func ->
-//                        logger.info(func.toString())
-//                    }
+
+                    mc.detail += "-------------------------\\n"
+                    dec.getAllFunctions().forEach { func ->
+                        mc.temporaries.add(func.returnType.toString())
+                        func.parameters.forEach {
+                            mc.temporaries.add(it.type.toString())
+                        }
+                        val l = func.parameters.joinToString {
+                            it.type.toString()
+                        }
+                        mc.detail += "+ $func($l): ${func.returnType}\\n"
+                    }
+
                 }
             }
         }
 
-        logger.info("createNewFile >>>")
         val f = environment.codeGenerator.createNewFile(
             Dependencies(false),
             "",
             "data",
             extensionName = "json"
         )
-
         val json = MyClass.toJsonString(allClass)
         logger.info(json)
 
         f.write(json.toByteArray())
         f.close()
-        logger.info("closeFile")
 
         return emptyList()
     }

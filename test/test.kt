@@ -8,6 +8,9 @@ class Demo {
         println("this is Demo myFun")
     }
     
+    fun myFun1(param0: String, param1: Int): String {
+        return ""
+    }
 }
 
 class Foo: Demo {

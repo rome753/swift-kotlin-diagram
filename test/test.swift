@@ -16,7 +16,7 @@ class MyClass {
 
     }
 
-    func func2() -> String {
+    func func2(param: String) -> String {
         return String()
     }
 
