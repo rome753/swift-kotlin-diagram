@@ -165,7 +165,10 @@ if __name__ == '__main__':
         projPath = sys.argv[1]
 
     tree = visit(projPath)
-    data = os.path.join(os.path.dirname(sys.argv[0]), 'generate', 'tree.json')
+    genDir = os.path.join(os.path.dirname(sys.argv[0]), 'generate')
+    if os.path.exists(genDir) == False:
+        os.mkdir(genDir)
+    data = os.path.join(genDir, 'tree.json')
     f = open(data, 'w')
     f.write(json.dumps(tree))
     f.close()
