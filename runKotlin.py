@@ -43,7 +43,11 @@ if __name__ == '__main__':
     os.chdir(os.path.join(runPath, 'kotlin'))
 
     tree = visit(projPath)
-    data = os.path.join('..', 'generate', 'tree.json')
+
+    genDir = os.path.join('..', 'generate')
+    if os.path.exists(genDir) == False:
+        os.mkdir(genDir)
+    data = os.path.join(genDir, 'tree.json')
     f = open(data, 'w')
     f.write(json.dumps(tree))
     f.close()
